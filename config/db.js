@@ -1,6 +1,7 @@
 'use strict';
 const Sequelize = require('sequelize');
 const settings_account = require('../setting').mysql_account;
+const settings_auth = require('../setting').mysql_auth;
 const logger = require('./logger');
 const Op = Sequelize.Op;
 const operatorsAliases = {
@@ -41,10 +42,10 @@ const operatorsAliases = {
 };
 const privateKey = process.env.SSL_SEQUELIZE;
 
-const sequelize = new Sequelize(settings_account.dbname, settings_account.username, settings_account.password, {
+const sequelizeAccount = new Sequelize(settings_account.dbname, settings_account.username, settings_account.password, {
   operatorsAliases,
-  host: settings.hostname,
-  port: settings.port,
+  host: settings_account.hostname,
+  port: settings_account.port,
   dialect: 'mysql',
   dialectOptions: {
     ssl: {
@@ -62,14 +63,44 @@ const sequelize = new Sequelize(settings_account.dbname, settings_account.userna
   timezone: '+07:00'
 });
 
-sequelize.authenticate()
+const sequelizeAuth = new Sequelize(settings_auth.dbname, settings_auth.username, settings_auth.password, {
+  operatorsAliases,
+  host: settings_auth.hostname,
+  port: settings_auth.port,
+  dialect: 'mysql',
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: true,
+      ca: privateKey.replace(/\\n/gm, '\n')
+    },
+  },
+  pool: {
+    max: 5,
+    min: 0,
+    acquire: 30000,
+    idle: 10000
+  },
+  timezone: '+07:00'
+});
+
+sequelizeAccount.authenticate()
   .then(() => {
-    logger.debug('Connection has been established successfully (account).');
+    logger.infoWithContext('Connection has been established successfully (account).');
   })
   .catch(err => {
-    logger.error('Unable to connect to the database (account):', err);
+    logger.errorWithContext({ error: err, message: 'Unable to connect to the database (account):' });
+  });
+
+  sequelizeAuth.authenticate()
+  .then(() => {
+    logger.infoWithContext('Connection has been established successfully (auth).');
+  })
+  .catch(err => {
+    logger.errorWithContext({ error: err, message: 'Unable to connect to the database (auth):' });
   });
 
 module.exports = {
-  Sequelize: sequelize
+  sequelizeAccount: sequelizeAccount,
+  sequelizeAuth: sequelizeAuth
 }
