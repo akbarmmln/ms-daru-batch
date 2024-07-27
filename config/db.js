@@ -1,6 +1,6 @@
 'use strict';
 const Sequelize = require('sequelize');
-const settings = require('../setting').mysql;
+const settings_account = require('../setting').mysql_account;
 const logger = require('./logger');
 const Op = Sequelize.Op;
 const operatorsAliases = {
@@ -41,7 +41,7 @@ const operatorsAliases = {
 };
 const privateKey = process.env.SSL_SEQUELIZE;
 
-const sequelize = new Sequelize(settings.dbname, settings.username, settings.password, {
+const sequelize = new Sequelize(settings_account.dbname, settings_account.username, settings_account.password, {
   operatorsAliases,
   host: settings.hostname,
   port: settings.port,
@@ -64,10 +64,10 @@ const sequelize = new Sequelize(settings.dbname, settings.username, settings.pas
 
 sequelize.authenticate()
   .then(() => {
-    logger.debug('Connection has been established successfully.');
+    logger.debug('Connection has been established successfully (account).');
   })
   .catch(err => {
-    logger.error('Unable to connect to the database:', err);
+    logger.error('Unable to connect to the database (account):', err);
   });
 
 module.exports = {
