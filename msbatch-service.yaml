@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: msbatch
+  namespace: sit
+  labels:
+    app: msbatch
+spec:
+  selector:
+    app: msbatch
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8996

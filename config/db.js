@@ -1,7 +1,6 @@
 'use strict';
 const Sequelize = require('sequelize');
-const settings_account = require('../setting').mysql_account;
-const settings_auth = require('../setting').mysql_auth;
+const connection_pool = require('../setting').mysql_connections_pool;
 const logger = require('./logger');
 const Op = Sequelize.Op;
 const operatorsAliases = {
@@ -41,66 +40,48 @@ const operatorsAliases = {
   $col: Op.col
 };
 const privateKey = process.env.SSL_SEQUELIZE;
+const sequelizeInstances = {};
 
-const sequelizeAccount = new Sequelize(settings_account.dbname, settings_account.username, settings_account.password, {
-  operatorsAliases,
-  host: settings_account.hostname,
-  port: settings_account.port,
-  dialect: 'mysql',
-  dialectOptions: {
-    ssl: {
-      require: true,
-      rejectUnauthorized: true,
-      ca: privateKey.replace(/\\n/gm, '\n')
+const createSequelizeInstance = (settings, privateKey) => {
+  return new Sequelize(settings.dbname, settings.username, settings.password, {
+    operatorsAliases,
+    host: settings.host,
+    port: settings.port,
+    dialect: 'mysql',
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: true,
+        ca: privateKey.replace(/\\n/gm, '\n')
+      },
     },
-  },
-  pool: {
-    max: 5,
-    min: 0,
-    acquire: 30000,
-    idle: 10000
-  },
-  timezone: '+07:00'
-});
-
-const sequelizeAuth = new Sequelize(settings_auth.dbname, settings_auth.username, settings_auth.password, {
-  operatorsAliases,
-  host: settings_auth.hostname,
-  port: settings_auth.port,
-  dialect: 'mysql',
-  dialectOptions: {
-    ssl: {
-      require: true,
-      rejectUnauthorized: true,
-      ca: privateKey.replace(/\\n/gm, '\n')
+    pool: {
+      max: 5,
+      min: 0,
+      acquire: 30000,
+      idle: 10000
     },
-  },
-  pool: {
-    max: 5,
-    min: 0,
-    acquire: 30000,
-    idle: 10000
-  },
-  timezone: '+07:00'
-});
-
-sequelizeAccount.authenticate()
-  .then(() => {
-    logger.infoWithContext('Connection has been established successfully (account).');
-  })
-  .catch(err => {
-    logger.errorWithContext({ error: err, message: 'Unable to connect to the database (account):' });
+    timezone: '+07:00'
   });
+};
 
-  sequelizeAuth.authenticate()
-  .then(() => {
-    logger.infoWithContext('Connection has been established successfully (auth).');
-  })
-  .catch(err => {
-    logger.errorWithContext({ error: err, message: 'Unable to connect to the database (auth):' });
-  });
+try {
+  const connectionsPool = JSON.parse(connection_pool);
+  for (let i = 0; i < connectionsPool.length; i++) {
+      const sequelize = createSequelizeInstance(connectionsPool[i], privateKey);
+      sequelize.authenticate()
+        .then(() => {
+          logger.infoWithContext(`Connection has been established successfully (${connectionsPool[i].dbname}).`);
+        })
+        .catch(err => {
+          logger.errorWithContext({ error: err, message: `Unable to connect to the database (${connectionsPool[i].dbname})` });
+        });
+        sequelizeInstances[connectionsPool[i].name] = sequelize
+  }
+} catch (error) {
+  logger.errorWithContext({ error, message: 'Error initializing databases' });
+}
 
 module.exports = {
-  sequelizeAccount: sequelizeAccount,
-  sequelizeAuth: sequelizeAuth
+  connect: sequelizeInstances
 }

@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: msbatch
+  namespace: sit
+  labels:
+    app: msbatch
+    version: v1
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  minReadySeconds: 60
+  selector:
+    matchLabels:
+      app: msbatch
+  template:
+    metadata:
+      labels:
+        app: msbatch
+        version: v1
+    spec:
+      containers:
+      - name: msbatch
+        image: taufik90/ms-msbatch:1
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8996
+        env:
+         - name: PORT
+           valueFrom:
+            secretKeyRef:
+              name: msbatch-secret
+              key: PORT
+         - name: SSL_SEQUELIZE
+           valueFrom:
+            secretKeyRef:
+              name: msbatch-secret
+              key: SSL_SEQUELIZE
+         - name: ACC_KEY_ID
+           valueFrom:
+            secretKeyRef:
+              name: msbatch-secret
+              key: ACC_KEY_ID
+         - name: SCR_ACC_KEY
+           valueFrom:
+            secretKeyRef:
+              name: msbatch-secret
+              key: SCR_ACC_KEY
+         - name: OSS_REGION
+           valueFrom:
+            secretKeyRef:
+              name: msbatch-secret
+              key: OSS_REGION
+         - name: OSS_ENDPOINT
+           valueFrom:
+            secretKeyRef:
+              name: msbatch-secret
+              key: OSS_ENDPOINT
+         - name: SECRET
+           valueFrom:
+            secretKeyRef:
+              name: msbatch-secret
+              key: SECRET
+         - name: FIREBASE_PRIVATE_KEY
+           valueFrom:
+            secretKeyRef:
+              name: msbatch-secret
+              key: FIREBASE_PRIVATE_KEY
+         - name: FIREBASE_PROJECT_ID
+           valueFrom:
+            secretKeyRef:
+              name: msbatch-secret
+              key: FIREBASE_PROJECT_ID
+         - name: FIREBASE_CLIENT_EMAIL
+           valueFrom:
+            secretKeyRef:
+              name: msbatch-secret
+              key: FIREBASE_CLIENT_EMAIL
+         - name: FIREBASE_DB_URL
+           valueFrom:
+            secretKeyRef:
+              name: msbatch-secret
+              key: FIREBASE_DB_URL
+         - name: LOGGER_LEVEL
+           valueFrom:
+            secretKeyRef:
+              name: msbatch-secret
+              key: LOGGER_LEVEL
+         - name: SERVICE_NAME
+           valueFrom:
+            secretKeyRef:
+              name: msbatch-secret
+              key: SERVICE_NAME
+         - name: MYSQL_CONNECTIONS_POOL
+           valueFrom:
+            secretKeyRef:
+              name: msbatch-secret
+              key: MYSQL_CONNECTIONS_POOL
+      restartPolicy: Always
