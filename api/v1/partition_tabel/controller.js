@@ -93,6 +93,37 @@ exports.daily_snapshot_va = async function () {
     if (transaction) {
       transaction.rollback();
     }
-    logger.errorWithContext({ error: e, message: 'error coba...' })
+    logger.errorWithContext({ error: e, message: 'error daily snapshot va...' })
+  }
+}
+
+exports.partition_user_trx = async function () {
+  try {
+    logger.infoWithContext('running partition table user transactions')
+    const partition_name = moment().add(1, 'month').format('YYYYMM');
+    const sqlCreateTable = `CREATE TABLE IF NOT EXISTS ms_payment.user_transaction_p${partition_name} (
+      "id" varchar(100) NOT NULL,
+      "created_dt" datetime(3) DEFAULT NULL,
+      "created_by" varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL,
+      "modified_dt" datetime(3) DEFAULT NULL,
+      "modified_by" varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL,
+      "is_deleted" tinyint(1) DEFAULT NULL,
+      "request_id" varchar(100) DEFAULT NULL,
+      "account_id" varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL,
+      "amount" decimal(24,2) DEFAULT NULL,
+      "transaction_type" varchar(10) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL,
+      "state" longtext CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci,
+      "payload" longtext,
+      "status" tinyint(1) DEFAULT NULL,
+      "partition" varchar(10) DEFAULT NULL,
+      "publish" tinyint(1) DEFAULT '1',
+      PRIMARY KEY ("id"),
+      KEY "user_transaction_p202408_request_id_IDX" ("request_id"),
+      KEY "user_transaction_p202408_account_id_IDX" ("account_id")
+    );`
+    await seq_ms_payment.query(`${sqlCreateTable}`);
+    logger.infoWithContext('end partition table user transactions')
+  } catch (e) {
+    logger.errorWithContext({ error: e, message: 'error create table partition user transaction...' })
   }
 }
