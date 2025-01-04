@@ -25,7 +25,7 @@ spec:
     spec:
       containers:
       - name: msbatch
-        image: taufik90/ms-msbatch:1
+        image: taufik90/ms-batch:2
         imagePullPolicy: Always
         ports:
         - containerPort: 8996
