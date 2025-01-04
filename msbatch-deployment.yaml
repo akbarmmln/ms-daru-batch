@@ -100,4 +100,19 @@ spec:
             secretKeyRef:
               name: msbatch-secret
               key: MYSQL_CONNECTIONS_POOL
+         - name: SCHE_TIME_PARTITION_USER_TRX
+           valueFrom:
+            secretKeyRef:
+              name: msbatch-secret
+              key: SCHE_TIME_PARTITION_USER_TRX
+         - name: SCHE_TIME_DAILY_SNAP_VA
+           valueFrom:
+            secretKeyRef:
+              name: msbatch-secret
+              key: SCHE_TIME_DAILY_SNAP_VA
+         - name: SCHE_TIME_CHECK_FUNCTION
+           valueFrom:
+            secretKeyRef:
+              name: msbatch-secret
+              key: SCHE_TIME_CHECK_FUNCTION
       restartPolicy: Always
