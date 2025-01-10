@@ -27,6 +27,11 @@ spec:
       - name: msbatch
         image: taufik90/ms-batch:$BUILD_NUMBER
         imagePullPolicy: Always
+        resources:
+            requests:
+              ephemeral-storage: "1Gi"
+            limits:
+              ephemeral-storage: "2Gi"
         ports:
         - containerPort: 8996
         env:
